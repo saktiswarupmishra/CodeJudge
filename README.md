@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <img src="docs/app-screenshot.png" alt="CodeJudge App Interface" width="100%"/>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white" />
   <img src="https://img.shields.io/badge/Hono.js-4.6-E36002?logo=hono&logoColor=white" />
   <img src="https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma&logoColor=white" />
