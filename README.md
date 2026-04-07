@@ -315,5 +315,5 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 ---
 
 <p align="center">
-  Built with ❤️ for competitive programmers
+  Made by ❤️ Sakti Swarup Mishra......
 </p>
