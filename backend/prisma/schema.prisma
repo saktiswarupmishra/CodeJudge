@@ -1,0 +1,94 @@
+// Prisma Schema for Online Coding Judge
+// Using Prisma ORM v5 with MySQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum SubmissionResult {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+}
+
+enum Language {
+  CPP
+  JAVA
+  PYTHON
+  JAVASCRIPT
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(100)
+  email       String       @unique @db.VarChar(255)
+  password    String       @db.VarChar(255)
+  role        Role         @default(USER)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  submissions Submission[]
+
+  @@map("users")
+}
+
+model Problem {
+  id          Int          @id @default(autoincrement())
+  title       String       @db.VarChar(255)
+  description String       @db.Text
+  difficulty  Difficulty   @default(EASY)
+  tags        Json         @default("[]")
+  constraints String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  testCases   TestCase[]
+  submissions Submission[]
+
+  @@map("problems")
+}
+
+model TestCase {
+  id        Int      @id @default(autoincrement())
+  problemId Int      @map("problem_id")
+  input     String   @db.Text
+  output    String   @db.Text
+  isHidden  Boolean  @default(false) @map("is_hidden")
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("test_cases")
+}
+
+model Submission {
+  id            Int              @id @default(autoincrement())
+  userId        Int              @map("user_id")
+  problemId     Int              @map("problem_id")
+  code          String           @db.Text
+  language      Language
+  result        SubmissionResult @default(PENDING)
+  executionTime Float?           @map("execution_time")
+  memoryUsage   Float?           @map("memory_usage")
+  output        String?          @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at")
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem       Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("submissions")
+}
