@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { User, AuthResponse, ApiResponse } from '../models';
+import { User, AuthResponse, ApiResponse, PublicProfile } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -59,6 +59,14 @@ export class AuthService {
 
   getProfile(): Observable<ApiResponse<User>> {
     return this.http.get<ApiResponse<User>>(`${this.apiUrl}/auth/me`);
+  }
+
+  getPublicProfile(userId: number): Observable<ApiResponse<PublicProfile>> {
+    return this.http.get<ApiResponse<PublicProfile>>(`${this.apiUrl}/auth/profile/${userId}`);
+  }
+
+  updateProfile(data: { name?: string; bio?: string }): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.apiUrl}/auth/me`, data);
   }
 
   getAllUsers(): Observable<ApiResponse<any[]>> {
