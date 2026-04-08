@@ -4,6 +4,8 @@ export interface User {
   name: string;
   email: string;
   role: 'USER' | 'ADMIN';
+  bio?: string;
+  avatarUrl?: string;
   createdAt: string;
 }
 
@@ -17,6 +19,21 @@ export interface AuthResponse {
   error?: string;
 }
 
+export interface PublicProfile {
+  id: number;
+  name: string;
+  bio?: string;
+  avatarUrl?: string;
+  role: string;
+  createdAt: string;
+  activityMap: Record<string, number>;
+  currentStreak: number;
+  maxStreak: number;
+  totalSolved: number;
+  totalActivity: number;
+  _count: { submissions: number };
+}
+
 // ─── Problem ────────────────────────────────
 export interface Problem {
   id: number;
@@ -25,9 +42,15 @@ export interface Problem {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   tags: string[];
   constraints?: string;
+  examples?: any[];
+  editorial?: string;
   createdAt: string;
   testCases?: TestCase[];
   _count?: { submissions: number; testCases: number };
+  acceptanceRate?: number;
+  totalSubmissions?: number;
+  userStatus?: 'solved' | 'attempted' | 'todo';
+  acceptedCount?: number;
 }
 
 export interface TestCase {
@@ -82,6 +105,14 @@ export interface UserStats {
   difficultyBreakdown: { EASY: number; MEDIUM: number; HARD: number };
   languageStats: Record<string, number>;
   recentSubmissions: number;
+}
+
+// ─── Platform Stats ─────────────────────────
+export interface PlatformStats {
+  totalProblems: number;
+  totalUsers: number;
+  totalSubmissions: number;
+  difficultyBreakdown: { EASY: number; MEDIUM: number; HARD: number };
 }
 
 // ─── Common ─────────────────────────────────

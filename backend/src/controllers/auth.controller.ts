@@ -18,6 +18,11 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const updateProfileSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  bio: z.string().max(500).optional(),
+});
+
 export class AuthController {
   static async register(c: Context) {
     try {
@@ -54,6 +59,34 @@ export class AuthController {
       return c.json({ success: true, data: profile });
     } catch (error: any) {
       return c.json({ success: false, error: error.message }, 404);
+    }
+  }
+
+  static async getPublicProfile(c: Context) {
+    try {
+      const id = parseInt(c.req.param('id'));
+      if (isNaN(id)) {
+        return c.json({ success: false, error: 'Invalid user ID' }, 400);
+      }
+      const profile = await AuthService.getPublicProfile(id);
+      return c.json({ success: true, data: profile });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 404);
+    }
+  }
+
+  static async updateProfile(c: Context) {
+    try {
+      const user = c.get('user');
+      const body = await c.req.json();
+      const validated = updateProfileSchema.parse(body);
+      const profile = await AuthService.updateProfile(user.userId, validated);
+      return c.json({ success: true, data: profile });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return c.json({ success: false, error: 'Validation failed', details: error.errors }, 400);
+      }
+      return c.json({ success: false, error: error.message }, 400);
     }
   }
 

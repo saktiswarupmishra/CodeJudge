@@ -43,9 +43,12 @@ model User {
   email       String       @unique @db.VarChar(255)
   password    String       @db.VarChar(255)
   role        Role         @default(USER)
+  bio         String?      @db.VarChar(500)
+  avatarUrl   String?      @map("avatar_url") @db.VarChar(500)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   submissions Submission[]
+  bookmarks   Bookmark[]
 
   @@map("users")
 }
@@ -57,10 +60,13 @@ model Problem {
   difficulty  Difficulty   @default(EASY)
   tags        Json         @default("[]")
   constraints String?      @db.Text
+  examples    Json?        @default("[]")
+  editorial   String?      @db.Text
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   testCases   TestCase[]
   submissions Submission[]
+  bookmarks   Bookmark[]
 
   @@map("problems")
 }
@@ -91,4 +97,16 @@ model Submission {
   problem       Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@map("submissions")
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  problemId Int      @map("problem_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@map("bookmarks")
 }

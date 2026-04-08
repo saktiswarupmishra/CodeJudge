@@ -30,13 +30,24 @@ const updateProblemSchema = z.object({
 export class ProblemController {
   static async getAll(c: Context) {
     try {
-      const { difficulty, tag, search, page, limit } = c.req.query();
+      const { difficulty, tag, search, page, limit, sort, order, status } = c.req.query();
+      // Try to get userId from auth header if present
+      let userId: number | undefined;
+      try {
+        const user = c.get('user');
+        userId = user?.userId;
+      } catch {}
+
       const result = await ProblemService.getAll({
         difficulty: difficulty as any,
         tag,
         search,
         page: page ? parseInt(page) : undefined,
         limit: limit ? parseInt(limit) : undefined,
+        sort,
+        order,
+        status,
+        userId,
       });
       return c.json({ success: true, data: result });
     } catch (error: any) {
@@ -122,6 +133,61 @@ export class ProblemController {
       return c.json({ success: true, data: result });
     } catch (error: any) {
       return c.json({ success: false, error: error.message }, 404);
+    }
+  }
+
+  // ─── New endpoints ───────────────────────────
+
+  static async getAllTags(c: Context) {
+    try {
+      const tags = await ProblemService.getAllTags();
+      return c.json({ success: true, data: tags });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+  }
+
+  static async getPlatformStats(c: Context) {
+    try {
+      const stats = await ProblemService.getPlatformStats();
+      return c.json({ success: true, data: stats });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+  }
+
+  static async toggleBookmark(c: Context) {
+    try {
+      const user = c.get('user');
+      const problemId = parseInt(c.req.param('id'));
+      if (isNaN(problemId)) {
+        return c.json({ success: false, error: 'Invalid problem ID' }, 400);
+      }
+      const result = await ProblemService.toggleBookmark(user.userId, problemId);
+      return c.json({ success: true, data: result });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+  }
+
+  static async getBookmarks(c: Context) {
+    try {
+      const user = c.get('user');
+      const bookmarks = await ProblemService.getBookmarks(user.userId);
+      return c.json({ success: true, data: bookmarks });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+  }
+
+  static async isBookmarked(c: Context) {
+    try {
+      const user = c.get('user');
+      const problemId = parseInt(c.req.param('id'));
+      const bookmarked = await ProblemService.isBookmarked(user.userId, problemId);
+      return c.json({ success: true, data: { bookmarked } });
+    } catch (error: any) {
+      return c.json({ success: false, error: error.message }, 500);
     }
   }
 }
