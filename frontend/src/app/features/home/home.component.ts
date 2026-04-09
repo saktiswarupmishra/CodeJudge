@@ -14,7 +14,7 @@ import { PlatformStats } from '../../core/models';
       <section class="hero-section">
         <div class="hero-content">
           <div class="badge-wrapper">
-            <span class="version-badge">Version 2.0 is Live! 🚀</span>
+            <span class="version-badge">Version 1.0 is Live! 🚀</span>
           </div>
           <h1 class="hero-title">
             Master Algorithms.<br />
@@ -93,7 +93,7 @@ import { PlatformStats } from '../../core/models';
 
       <!-- Footer -->
       <footer class="footer">
-        <p>© 2024 CodeJudge Platform. Built for developers by developers.</p>
+        <p>© 2026 CodeJudge Platform. Built for developers by developers.</p>
       </footer>
     </div>
   `,
@@ -341,13 +341,13 @@ import { PlatformStats } from '../../core/models';
 })
 export class HomeComponent implements OnInit {
   stats: PlatformStats | null = null;
-  
-  constructor(private problemService: ProblemService) {}
+
+  constructor(private problemService: ProblemService) { }
 
   ngOnInit() {
     this.problemService.getPlatformStats().subscribe({
       next: (res) => {
-        if(res.success) this.stats = res.data!;
+        if (res.success) this.stats = res.data!;
       }
     });
   }
