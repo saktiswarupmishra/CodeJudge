@@ -34,20 +34,7 @@ import { AuthService } from '../../core/services/auth.service';
           </button>
         </form>
 
-        <div class="divider">
-          <span>Or continue with</span>
-        </div>
 
-        <div class="social-login">
-          <button type="button" class="social-btn google-btn" (click)="socialLogin('Google')">
-            <svg viewBox="0 0 24 24" class="social-icon"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Google
-          </button>
-          <button type="button" class="social-btn apple-btn" (click)="socialLogin('Apple')">
-            <svg viewBox="0 0 24 24" class="social-icon"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.09 2.4-.88 3.93-.76 1.41.07 2.6.59 3.44 1.57-2.9 1.63-2.4 5.61.42 6.8-.75 1.95-1.57 3.63-2.87 4.58zm-3.98-14.4c.14-1.55-1-2.92-2.45-3.2-1.36 1.54-.42 3.31 2.45 3.2z"/></svg>
-            Apple
-          </button>
-        </div>
 
         <p class="auth-footer">Don't have an account? <a routerLink="/register">Sign up</a></p>
       </div>
@@ -146,63 +133,6 @@ import { AuthService } from '../../core/services/auth.service';
 
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 1.5rem 0;
-    }
-
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .divider span {
-      padding: 0 10px;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    .social-login {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .social-btn {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.7rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .social-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border-strong);
-    }
-
-    .social-icon {
-      width: 18px;
-      height: 18px;
-    }
-    
-    .apple-btn .social-icon {
-      color: #fff;
-    }
-
     .error-msg {
       background: var(--red-bg);
       border: 1px solid rgba(239, 68, 68, 0.2);
@@ -252,7 +182,5 @@ export class LoginComponent {
     });
   }
 
-  socialLogin(provider: string) {
-    this.error.set(`${provider} login will be implemented soon.`);
-  }
+
 }

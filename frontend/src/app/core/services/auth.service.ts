@@ -66,6 +66,7 @@ export class AuthService {
     );
   }
 
+
   logout(): void {
     this.token.set(null);
     this.currentUser.set(null);

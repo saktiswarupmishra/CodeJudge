@@ -32,6 +32,7 @@ const verifyOtpSchema = z.object({
   otp: z.string().length(6),
 });
 
+
 export class AuthController {
   static async register(c: Context) {
     try {
@@ -88,6 +89,7 @@ export class AuthController {
       return c.json({ success: false, error: error.message }, 401);
     }
   }
+
 
   static async getProfile(c: Context) {
     try {
