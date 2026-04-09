@@ -4,8 +4,10 @@
  */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import twilio from 'twilio';
 import { prisma } from '../config/database';
 import { env } from '../config/env';
+import { getRedisConnection } from '../config/redis';
 import { JwtPayload, SafeUser } from '../types';
 
 const SALT_ROUNDS = 10;
@@ -57,6 +59,64 @@ export class AuthService {
     const { password: _, ...safeUser } = user;
     return { user: safeUser, token };
   }
+
+  /**
+   * Send an OTP to a mobile number via Twilio
+   */
+  static async sendMobileOtp(mobile: string): Promise<void> {
+    if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
+        throw new Error('Twilio credentials not configured in backend .env');
+    }
+
+    const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store in redis for 5 minutes
+    const redis = getRedisConnection();
+    await redis.set(`auth:otp:${mobile}`, otp, 'EX', 300);
+
+    // Send SMS
+    await client.messages.create({
+      body: `Your Online Code Judge OTP is: ${otp}`,
+      from: env.TWILIO_PHONE_NUMBER,
+      to: mobile
+    });
+  }
+
+  /**
+   * Verify an OTP and log the user in
+   */
+  static async verifyMobileOtp(mobile: string, otp: string): Promise<{ user: SafeUser; token: string }> {
+    const redis = getRedisConnection();
+    const storedOtp = await redis.get(`auth:otp:${mobile}`);
+    
+    if (!storedOtp || storedOtp !== otp) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    await redis.del(`auth:otp:${mobile}`);
+
+    // Given no mobile column in DB, we default to the demo user profile for the mobile login flow.
+    const email = 'john@codejudge.com';
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new Error('Demo user missing from database');
+    }
+
+    const payload: JwtPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, env.JWT_SECRET, {
+      expiresIn: env.JWT_EXPIRES_IN,
+    });
+
+    const { password: _, ...safeUser } = user;
+    return { user: safeUser, token };
+  }
+
 
   /**
    * Get user profile by ID

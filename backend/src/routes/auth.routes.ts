@@ -10,6 +10,8 @@ const authRoutes = new Hono();
 
 authRoutes.post('/register', AuthController.register);
 authRoutes.post('/login', AuthController.login);
+authRoutes.post('/send-otp', AuthController.sendMobileOtp);
+authRoutes.post('/verify-otp', AuthController.verifyMobileOtp);
 authRoutes.get('/me', authMiddleware, AuthController.getProfile);
 authRoutes.put('/me', authMiddleware, AuthController.updateProfile);
 authRoutes.get('/profile/:id', AuthController.getPublicProfile);

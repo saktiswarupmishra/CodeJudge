@@ -23,6 +23,15 @@ const updateProfileSchema = z.object({
   bio: z.string().max(500).optional(),
 });
 
+const sendOtpSchema = z.object({
+  mobile: z.string().min(10),
+});
+
+const verifyOtpSchema = z.object({
+  mobile: z.string().min(10),
+  otp: z.string().length(6),
+});
+
 export class AuthController {
   static async register(c: Context) {
     try {
@@ -43,6 +52,34 @@ export class AuthController {
       const body = await c.req.json();
       const validated = loginSchema.parse(body);
       const result = await AuthService.login(validated.email, validated.password);
+      return c.json({ success: true, data: result });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return c.json({ success: false, error: 'Validation failed', details: error.errors }, 400);
+      }
+      return c.json({ success: false, error: error.message }, 401);
+    }
+  }
+
+  static async sendMobileOtp(c: Context) {
+    try {
+      const body = await c.req.json();
+      const validated = sendOtpSchema.parse(body);
+      await AuthService.sendMobileOtp(validated.mobile);
+      return c.json({ success: true, message: 'OTP sent successfully' });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return c.json({ success: false, error: 'Validation failed', details: error.errors }, 400);
+      }
+      return c.json({ success: false, error: error.message }, 400);
+    }
+  }
+
+  static async verifyMobileOtp(c: Context) {
+    try {
+      const body = await c.req.json();
+      const validated = verifyOtpSchema.parse(body);
+      const result = await AuthService.verifyMobileOtp(validated.mobile, validated.otp);
       return c.json({ success: true, data: result });
     } catch (error: any) {
       if (error instanceof z.ZodError) {

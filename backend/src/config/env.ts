@@ -28,4 +28,8 @@ export const env = {
   DOCKER_TIMEOUT: parseInt(process.env.DOCKER_TIMEOUT || '10000', 10),
   DOCKER_MEMORY_LIMIT: parseInt(process.env.DOCKER_MEMORY_LIMIT || '268435456', 10),
   DOCKER_CPU_LIMIT: parseInt(process.env.DOCKER_CPU_LIMIT || '1', 10),
+  // Twilio SMS
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '',
+  TWILIO_PHONE_NUMBER: process.env.TWILIO_PHONE_NUMBER || '',
 } as const;

@@ -49,6 +49,23 @@ export class AuthService {
     );
   }
 
+  sendMobileOtp(mobile: string): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(`${this.apiUrl}/auth/send-otp`, { mobile });
+  }
+
+  verifyMobileOtp(mobile: string, otp: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/verify-otp`, { mobile, otp }).pipe(
+      tap((res) => {
+        if (res.success && res.data) {
+          this.token.set(res.data.token);
+          this.currentUser.set(res.data.user);
+          localStorage.setItem('oj_token', res.data.token);
+          localStorage.setItem('oj_user', JSON.stringify(res.data.user));
+        }
+      })
+    );
+  }
+
   logout(): void {
     this.token.set(null);
     this.currentUser.set(null);

@@ -374,21 +374,33 @@ export class LoginComponent {
       return;
     }
     this.error.set('');
-    // Generate a 6-digit random OTP
-    this.generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    this.otpMode.set(true);
-    // Show pop up with the generated OTP to test the login
-    window.alert(`Demo OTP for ${this.selectedCountryCode} ${this.mobile}: ${this.generatedOtp}`);
+    this.loading.set(true);
+    
+    const fullMobile = `${this.selectedCountryCode}${this.mobile}`;
+    
+    this.auth.sendMobileOtp(fullMobile).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        this.otpMode.set(true);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.error || 'Failed to send OTP. Check Twilio configuration.');
+      }
+    });
   }
 
   verifyOtp() {
-    if (this.otp !== this.generatedOtp) {
-      this.error.set('Invalid OTP. Please try again.');
+    if (!this.otp || this.otp.length < 4) {
+      this.error.set('Please enter a valid OTP.');
       return;
     }
     this.loading.set(true);
-    // Using a seeded demo account for successful mobile login demo functionality
-    this.auth.login('john@codejudge.com', 'user123').subscribe({
+    this.error.set('');
+
+    const fullMobile = `${this.selectedCountryCode}${this.mobile}`;
+    
+    this.auth.verifyMobileOtp(fullMobile, this.otp).subscribe({
       next: (res) => {
         this.loading.set(false);
         if (res.success) {
@@ -399,7 +411,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.error?.error || 'Login failed');
+        this.error.set(err.error?.error || 'Invalid OTP');
       },
     });
   }
