@@ -1,337 +1,354 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { ProblemService } from '../../core/services/problem.service';
+import { PlatformStats } from '../../core/models';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="home">
-      <section class="hero">
+    <div class="home-page">
+      <!-- Hero Section -->
+      <section class="hero-section">
         <div class="hero-content">
-          <div class="hero-badge">🚀 Open Source Coding Platform</div>
-          <h1>Master Algorithms.<br><span class="gradient-text">Ace the Interview.</span></h1>
-          <p class="tagline">Practice 1000+ coding problems, compete with developers worldwide, and sharpen your problem-solving skills with real-time feedback.</p>
+          <div class="badge-wrapper">
+            <span class="version-badge">Version 2.0 is Live! 🚀</span>
+          </div>
+          <h1 class="hero-title">
+            Master Algorithms.<br />
+            <span class="accent">Ace Your Interviews.</span>
+          </h1>
+          <p class="hero-subtitle">
+            The ultimate platform for competitive programming and interview preparation.
+            Practice thousands of problems, track your progress, and get better every day.
+          </p>
           <div class="hero-actions">
-            @if (auth.isLoggedIn()) {
-              <a routerLink="/problems" class="btn-hero">Start Practicing</a>
-              <a routerLink="/dashboard" class="btn-hero-outline">My Dashboard</a>
-            } @else {
-              <a routerLink="/register" class="btn-hero">Get Started Free</a>
-              <a routerLink="/login" class="btn-hero-outline">Sign In</a>
-            }
+            <a routerLink="/problems" class="btn btn-primary">Start Coding Now</a>
+            <a routerLink="/leaderboard" class="btn btn-secondary">View Leaderboard</a>
           </div>
         </div>
-        <div class="hero-visual">
-          <div class="code-block">
-            <div class="code-header">
-              <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
-              <span class="code-filename">solution.py</span>
+        
+        <!-- Platform Stats Cards -->
+        @if (stats) {
+          <div class="stats-banner">
+            <div class="stat-item">
+              <span class="val">{{ stats.totalUsers | number }}</span>
+              <span class="lbl">Registered Users</span>
             </div>
-            <pre><code><span class="kw">def</span> <span class="fn">two_sum</span>(nums, target):
-    lookup = {{ '{' }}{{ '}' }}
-    <span class="kw">for</span> i, n <span class="kw">in</span> enumerate(nums):
-        <span class="kw">if</span> target - n <span class="kw">in</span> lookup:
-            <span class="kw">return</span> [lookup[target-n], i]
-        lookup[n] = i</code></pre>
-            <div class="code-footer">
-              <span class="result-badge">✅ Accepted</span>
-              <span class="time-badge">⏱ 45ms</span>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="val">{{ stats.totalProblems | number }}</span>
+              <span class="lbl">Coding Problems</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="val">{{ stats.totalSubmissions | number }}</span>
+              <span class="lbl">Code Submissions</span>
             </div>
           </div>
+        }
+      </section>
+
+      <!-- Topics Grid -->
+      <section class="features-section">
+        <h2 class="section-title">Explore by Topics</h2>
+        <p class="section-desc">Master specific data structures and algorithms</p>
+        
+        <div class="topics-grid">
+          <a [routerLink]="['/problems']" [queryParams]="{tag: 'Array'}" class="topic-card">
+            <div class="topic-icon">📊</div>
+            <h3>Arrays & Hashing</h3>
+            <p>Master the fundamentals of data storage and fast lookups.</p>
+          </a>
+          <a [routerLink]="['/problems']" [queryParams]="{tag: 'Two Pointers'}" class="topic-card">
+            <div class="topic-icon">👉👈</div>
+            <h3>Two Pointers</h3>
+            <p>Optimize array and string traversal algorithms.</p>
+          </a>
+          <a [routerLink]="['/problems']" [queryParams]="{tag: 'Dynamic Programming'}" class="topic-card">
+            <div class="topic-icon">🧠</div>
+            <h3>Dynamic Programming</h3>
+            <p>Solve complex problems by breaking them down into subproblems.</p>
+          </a>
+          <a [routerLink]="['/problems']" [queryParams]="{tag: 'Tree'}" class="topic-card">
+            <div class="topic-icon">🌲</div>
+            <h3>Trees & Graphs</h3>
+            <p>Traverse hierarchical and relational data structures.</p>
+          </a>
+        </div>
+      </section>
+      
+      <!-- Supported Languages -->
+      <section class="languages-section">
+        <h2 class="section-title">Code in Your Favorite Language</h2>
+        <div class="lang-glass-container">
+          <div class="lang-pill"><span class="icon">🐍</span> Python</div>
+          <div class="lang-pill"><span class="icon">☕</span> Java</div>
+          <div class="lang-pill"><span class="icon">⚙️</span> C++</div>
+          <div class="lang-pill"><span class="icon">📜</span> JavaScript</div>
         </div>
       </section>
 
-      <section class="features">
-        <div class="feature-card">
-          <div class="feature-icon-wrap"><span class="feature-icon">🧩</span></div>
-          <h3>Curated Problems</h3>
-          <p>Hand-picked coding challenges from Easy to Hard, including SQL</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap"><span class="feature-icon">⚡</span></div>
-          <h3>Fast Execution</h3>
-          <p>Docker-sandboxed code execution in under 2 seconds</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap"><span class="feature-icon">🏆</span></div>
-          <h3>Leaderboard</h3>
-          <p>Compete with others and climb the global rankings</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap"><span class="feature-icon">🔒</span></div>
-          <h3>Secure</h3>
-          <p>Isolated execution with CPU & memory limits</p>
-        </div>
-      </section>
-
-      <section class="languages">
-        <h2>Supported Languages</h2>
-        <div class="lang-grid">
-          <div class="lang-item"><span class="lang-icon">🐍</span> Python</div>
-          <div class="lang-item"><span class="lang-icon">⚙️</span> C++</div>
-          <div class="lang-item"><span class="lang-icon">☕</span> Java</div>
-          <div class="lang-item"><span class="lang-icon">🟨</span> JavaScript</div>
-        </div>
-      </section>
-
-      <footer class="site-footer">
-        <p>Built with ❤️ for developers · CodeJudge © 2026</p>
+      <!-- Footer -->
+      <footer class="footer">
+        <p>© 2024 CodeJudge Platform. Built for developers by developers.</p>
       </footer>
     </div>
   `,
   styles: [`
-    .home { max-width: 1120px; margin: 0 auto; padding: 2rem; }
+    .home-page { }
 
-    /* ── Hero ──────────────────────────────── */
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: center;
-      padding: 4rem 0 3rem;
+    .hero-section {
+      padding: 6rem 1rem 4rem;
+      text-align: center;
+      position: relative;
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
     }
 
-    .hero-badge {
+    .badge-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    .version-badge {
       display: inline-block;
-      background: var(--accent-glow);
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      color: #a5b4fc;
-      padding: 0.3rem 0.9rem;
+      padding: 0.4rem 1rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--accent-secondary);
       border-radius: 20px;
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      margin-bottom: 1.2rem;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.5px;
     }
 
-    .hero-content h1 {
-      font-size: 3.2rem;
-      color: var(--text-primary);
-      margin: 0 0 1.2rem;
-      line-height: 1.15;
+    .hero-title {
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1.1;
       font-weight: 800;
+      color: var(--text-primary);
+      margin: 0 0 1.5rem;
       letter-spacing: -0.02em;
     }
 
-    .gradient-text {
-      background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
+    .accent {
+      background: var(--accent-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .tagline {
+    .hero-subtitle {
+      font-size: 1.15rem;
       color: var(--text-secondary);
-      margin: 0 0 2rem;
-      line-height: 1.7;
-      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
     }
 
-    .hero-actions { display: flex; gap: 0.8rem; }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 4rem;
+    }
 
-    .btn-hero {
-      padding: 0.75rem 1.8rem;
+    .btn {
+      padding: 0.8rem 1.8rem;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-primary {
       background: var(--accent-gradient);
       color: #fff;
-      text-decoration: none;
-      border-radius: var(--radius-md);
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: transform var(--transition-fast), box-shadow var(--transition-base);
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
-
-    .btn-hero:hover {
+    .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
 
-    .btn-hero-outline {
-      padding: 0.75rem 1.8rem;
-      border: 1px solid var(--border-strong);
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text-primary);
-      text-decoration: none;
-      border-radius: var(--radius-md);
-      font-weight: 500;
-      font-size: 0.95rem;
-      transition: background var(--transition-fast), border-color var(--transition-fast);
+      border: 1px solid var(--border-default);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-strong);
     }
 
-    .btn-hero-outline:hover {
-      background: var(--bg-surface-hover);
-      border-color: rgba(99, 102, 241, 0.3);
-    }
-
-    /* ── Code Block ───────────────────────── */
-    .hero-visual { display: flex; justify-content: center; }
-
-    .code-block {
-      background: #0d1117;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: var(--shadow-elevated), 0 0 60px rgba(99, 102, 241, 0.08);
-      width: 100%;
-      border: 1px solid var(--border-subtle);
-    }
-
-    .code-header {
-      padding: 0.7rem 1rem;
-      background: rgba(255, 255, 255, 0.03);
+    /* Stats Banner */
+    .stats-banner {
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 0.8rem;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .dots { display: flex; gap: 6px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot.red { background: #ff5f56; }
-    .dot.yellow { background: #ffbd2e; }
-    .dot.green { background: #27c93f; }
-
-    .code-filename {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .code-block pre {
-      padding: 1.2rem 1.2rem;
-      margin: 0;
-      color: #e2e8f0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.75;
-    }
-
-    .kw { color: #c792ea; }
-    .fn { color: #82aaff; }
-
-    .code-footer {
-      padding: 0.6rem 1rem;
-      background: rgba(34, 197, 94, 0.06);
-      border-top: 1px solid rgba(34, 197, 94, 0.1);
-      display: flex;
-      gap: 0.8rem;
-      font-size: 0.78rem;
-    }
-
-    .result-badge { color: var(--green-light); font-weight: 600; }
-    .time-badge { color: var(--text-muted); }
-
-    /* ── Features ──────────────────────────── */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.2rem;
-      padding: 2rem 0 3rem;
-    }
-
-    .feature-card {
-      background: var(--bg-surface);
+      gap: 2.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(0,0,0,0.3);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+    
+    .stat-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border-subtle);
+    }
+
+    .stat-item .val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-item .lbl {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Topics grid */
+    .features-section {
+      padding: 5rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
       text-align: center;
-      transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
     }
 
-    .feature-card:hover {
+    .section-title {
+      font-size: 2.2rem;
+      color: var(--text-primary);
+      margin: 0 0 0.5rem;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      margin: 0 0 3rem;
+      font-size: 1.1rem;
+    }
+
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .topic-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 2rem 1.5rem;
+      border-radius: var(--radius-lg);
+      text-align: left;
+      text-decoration: none;
+      transition: transform 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topic-card:hover {
       transform: translateY(-4px);
-      border-color: rgba(99, 102, 241, 0.25);
-      box-shadow: var(--shadow-glow);
+      border-color: var(--accent-primary);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
-    .feature-icon-wrap {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 0.8rem;
-      border-radius: var(--radius-md);
-      background: var(--bg-elevated);
+    .topic-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.2rem;
+      background: rgba(255,255,255,0.05);
+      width: 60px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 12px;
     }
 
-    .feature-icon { font-size: 1.5rem; }
-
-    .feature-card h3 {
+    .topic-card h3 {
       color: var(--text-primary);
-      margin: 0 0 0.4rem;
-      font-size: 0.95rem;
-      font-weight: 600;
+      font-size: 1.2rem;
+      margin: 0 0 0.8rem;
     }
 
-    .feature-card p {
-      color: var(--text-muted);
-      margin: 0;
-      font-size: 0.82rem;
+    .topic-card p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
       line-height: 1.5;
+      margin: 0;
     }
 
-    /* ── Languages ─────────────────────────── */
-    .languages {
+    .languages-section {
       text-align: center;
-      padding: 2rem 0 3rem;
+      padding: 4rem 2rem 6rem;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.2));
     }
 
-    .languages h2 {
-      color: var(--text-primary);
-      margin-bottom: 1.2rem;
-      font-size: 1.3rem;
-      font-weight: 700;
-    }
-
-    .lang-grid {
+    .lang-glass-container {
       display: flex;
       justify-content: center;
-      gap: 1rem;
+      gap: 1.5rem;
+      margin-top: 2rem;
       flex-wrap: wrap;
     }
 
-    .lang-item {
+    .lang-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 1.1rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      font-weight: 500;
-      background: var(--bg-surface);
-      padding: 0.7rem 1.3rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-      transition: border-color var(--transition-fast);
+      gap: 0.8rem;
+      transition: all 0.3s ease;
     }
-
-    .lang-item:hover {
-      border-color: var(--border-default);
+    
+    .lang-pill:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.05);
+      border-color: rgba(255,255,255,0.2);
     }
+    
+    .lang-pill .icon { font-size: 1.3rem; }
 
-    .lang-icon { font-size: 1.2rem; }
-
-    /* ── Footer ─────────────────────────────── */
-    .site-footer {
+    .footer {
       text-align: center;
-      padding: 2rem 0;
+      padding: 2rem;
       border-top: 1px solid var(--border-subtle);
-      margin-top: 1rem;
-    }
-
-    .site-footer p {
-      color: var(--text-dim);
-      font-size: 0.82rem;
-    }
-
-    @media (max-width: 768px) {
-      .hero { grid-template-columns: 1fr; }
-      .hero-content h1 { font-size: 2.2rem; }
-      .features { grid-template-columns: repeat(2, 1fr); }
-      .lang-grid { flex-wrap: wrap; }
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.5);
     }
   `]
 })
-export class HomeComponent {
-  constructor(public auth: AuthService) {}
+export class HomeComponent implements OnInit {
+  stats: PlatformStats | null = null;
+  
+  constructor(private problemService: ProblemService) {}
+
+  ngOnInit() {
+    this.problemService.getPlatformStats().subscribe({
+      next: (res) => {
+        if(res.success) this.stats = res.data!;
+      }
+    });
+  }
 }

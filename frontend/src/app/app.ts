@@ -24,7 +24,7 @@ import { AuthService } from './core/services/auth.service';
           <div class="nav-divider"></div>
           <div class="nav-user">
             <span class="user-avatar">{{ auth.user()?.name?.charAt(0) || 'U' }}</span>
-            <span class="user-name">{{ auth.user()?.name }}</span>
+            <a [routerLink]="['/profile', auth.user()?.id]" class="user-name profile-link">{{ auth.user()?.name }}</a>
             <button class="btn-logout" (click)="auth.logout()">Logout</button>
           </div>
         } @else {
@@ -139,6 +139,13 @@ import { AuthService } from './core/services/auth.service';
       color: var(--text-secondary);
       font-size: 0.85rem;
       font-weight: 500;
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    
+    .profile-link:hover {
+      color: var(--accent-primary);
+      text-decoration: underline;
     }
 
     .btn-logout {

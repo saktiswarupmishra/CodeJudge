@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/app-screenshot.png" alt="CodeJudge App Interface" width="100%"/>
+  <img src="docs/image.png" alt="CodeJudge App Interface" width="100%"/>
 </p>
 
 <p align="center">
