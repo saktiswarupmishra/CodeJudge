@@ -22,29 +22,58 @@ import { AuthService } from '../../core/services/auth.service';
           <button type="button" class="tab-btn" [class.active]="loginMethod() === 'mobile'" (click)="loginMethod.set('mobile')">Mobile</button>
         </div>
 
-        <form (ngSubmit)="onLogin()" class="auth-form">
+        <form (ngSubmit)="loginMethod() === 'email' ? onLogin() : null" class="auth-form">
           @if (loginMethod() === 'email') {
             <div class="form-group">
               <label for="email">Email ID</label>
               <input id="email" type="email" [(ngModel)]="email" name="email" placeholder="you@example.com" required />
             </div>
-          } @else {
             <div class="form-group">
-              <label for="mobile">Mobile Number</label>
-              <input id="mobile" type="tel" [(ngModel)]="mobile" name="mobile" placeholder="+1 234 567 8900" required />
+              <label for="password">Password</label>
+              <input id="password" type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
             </div>
+            @if (error()) {
+              <div class="error-msg">{{ error() }}</div>
+            }
+            <button type="submit" class="btn-primary" [disabled]="loading()">
+              {{ loading() ? 'Signing in...' : 'Sign In' }}
+            </button>
+          } @else {
+            @if (!otpMode()) {
+              <div class="form-group">
+                <label for="mobile">Mobile Number</label>
+                <div class="mobile-input-group">
+                  <select [(ngModel)]="selectedCountryCode" name="countryCode" class="country-select">
+                    <option value="+1">+1</option>
+                    <option value="+91">+91</option>
+                    <option value="+44">+44</option>
+                    <option value="+61">+61</option>
+                  </select>
+                  <input id="mobile" type="tel" [(ngModel)]="mobile" name="mobile" placeholder="234 567 8900" required />
+                </div>
+              </div>
+              @if (error()) {
+                <div class="error-msg">{{ error() }}</div>
+              }
+              <button type="button" class="btn-primary" (click)="requestOtp()" [disabled]="!mobile || loading()">
+                {{ loading() ? 'Sending...' : 'Get OTP' }}
+              </button>
+            } @else {
+               <div class="form-group">
+                 <label for="otp">Enter OTP for {{ selectedCountryCode }} {{ mobile }}</label>
+                 <input id="otp" type="text" [(ngModel)]="otp" name="otp" placeholder="Enter 6-digit OTP" required />
+               </div>
+               @if (error()) {
+                 <div class="error-msg">{{ error() }}</div>
+               }
+               <button type="button" class="btn-primary" (click)="verifyOtp()" [disabled]="!otp || loading()">
+                 {{ loading() ? 'Verifying...' : 'Verify & Login' }}
+               </button>
+               <button type="button" class="btn-secondary" (click)="otpMode.set(false)" style="margin-top: 10px;">
+                 Back
+               </button>
+            }
           }
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
-          </div>
-          @if (error()) {
-            <div class="error-msg">{{ error() }}</div>
-          }
-          <button type="submit" class="btn-primary" [disabled]="loading()">
-            {{ loading() ? 'Signing in...' : 'Sign In' }}
-          </button>
         </form>
 
         <div class="divider">
@@ -186,6 +215,47 @@ import { AuthService } from '../../core/services/auth.service';
 
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    .btn-secondary {
+      width: 100%;
+      padding: 0.8rem;
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-strong);
+    }
+    
+    .mobile-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .country-select {
+      width: 80px;
+      padding: 0.7rem 0.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      box-sizing: border-box;
+    }
+    
+    .country-select:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
     .divider {
       display: flex;
       align-items: center;
@@ -269,6 +339,10 @@ export class LoginComponent {
   email = '';
   mobile = '';
   password = '';
+  selectedCountryCode = '+1';
+  otpMode = signal(false);
+  otp = '';
+  generatedOtp = '';
   loading = signal(false);
   error = signal('');
 
@@ -278,12 +352,43 @@ export class LoginComponent {
     this.loading.set(true);
     this.error.set('');
     
-    // In a real application, you would handle mobile vs email differently here.
-    // For now we'll route to the existing auth logic which supports email.
-    // If mobile is selected, we fallback to sending it as email for backend compatibility
-    const authIdentifier = this.loginMethod() === 'email' ? this.email : this.mobile;
-    
-    this.auth.login(authIdentifier, this.password).subscribe({
+    this.auth.login(this.email, this.password).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        if (res.success) {
+          this.router.navigate(['/']);
+        } else {
+          this.error.set(res.error || 'Login failed');
+        }
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.error || 'Login failed');
+      },
+    });
+  }
+
+  requestOtp() {
+    if (!this.mobile) {
+      this.error.set('Please enter a valid mobile number');
+      return;
+    }
+    this.error.set('');
+    // Generate a 6-digit random OTP
+    this.generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otpMode.set(true);
+    // Show pop up with the generated OTP to test the login
+    window.alert(`Demo OTP for ${this.selectedCountryCode} ${this.mobile}: ${this.generatedOtp}`);
+  }
+
+  verifyOtp() {
+    if (this.otp !== this.generatedOtp) {
+      this.error.set('Invalid OTP. Please try again.');
+      return;
+    }
+    this.loading.set(true);
+    // Using a seeded demo account for successful mobile login demo functionality
+    this.auth.login('john@codejudge.com', 'user123').subscribe({
       next: (res) => {
         this.loading.set(false);
         if (res.success) {
