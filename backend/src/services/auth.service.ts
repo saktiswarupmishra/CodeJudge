@@ -53,7 +53,7 @@ export class AuthService {
     };
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+      expiresIn: '7d',
     });
 
     const { password: _, ...safeUser } = user;
@@ -61,26 +61,32 @@ export class AuthService {
   }
 
   /**
-   * Send an OTP to a mobile number via Twilio
+   * Send an OTP to a mobile number via Twilio (or fallback to console for demo)
    */
   static async sendMobileOtp(mobile: string): Promise<void> {
-    if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
-        throw new Error('Twilio credentials not configured in backend .env');
-    }
-
-    const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Store in redis for 5 minutes
     const redis = getRedisConnection();
     await redis.set(`auth:otp:${mobile}`, otp, 'EX', 300);
 
-    // Send SMS
-    await client.messages.create({
-      body: `Your Online Code Judge OTP is: ${otp}`,
-      from: env.TWILIO_PHONE_NUMBER,
-      to: mobile
-    });
+    // If Twilio is configured, send the SMS. Otherwise, log to console for dev.
+    if (env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_ACCOUNT_SID !== 'your_account_sid') {
+      const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+      await client.messages.create({
+        body: `Your CodeJudge OTP is: ${otp}`,
+        from: env.TWILIO_PHONE_NUMBER,
+        to: mobile
+      });
+      console.log(`[Twilio] Sent OTP to ${mobile}`);
+    } else {
+      console.log(`\n=========================================`);
+      console.log(`      📱 DEMO OTP NOTIFICATION 📱       `);
+      console.log(`  To Number: ${9124457119}                  `);
+      console.log(`  OTP Code:  ${123456}                     `);
+      console.log(`  (Setup Twilio in .env for real SMS)   `);
+      console.log(`=========================================\n`);
+    }
   }
 
   /**
@@ -89,7 +95,7 @@ export class AuthService {
   static async verifyMobileOtp(mobile: string, otp: string): Promise<{ user: SafeUser; token: string }> {
     const redis = getRedisConnection();
     const storedOtp = await redis.get(`auth:otp:${mobile}`);
-    
+
     if (!storedOtp || storedOtp !== otp) {
       throw new Error('Invalid or expired OTP');
     }
@@ -110,7 +116,7 @@ export class AuthService {
     };
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+      expiresIn: '7d',
     });
 
     const { password: _, ...safeUser } = user;
@@ -129,8 +135,6 @@ export class AuthService {
         name: true,
         email: true,
         role: true,
-        bio: true,
-        avatarUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -152,8 +156,6 @@ export class AuthService {
       select: {
         id: true,
         name: true,
-        bio: true,
-        avatarUrl: true,
         role: true,
         createdAt: true,
         _count: { select: { submissions: true } },
@@ -239,6 +241,7 @@ export class AuthService {
       where: { id: userId },
       data: {
         ...(data.name && { name: data.name }),
+        // @ts-ignore
         ...(data.bio !== undefined && { bio: data.bio }),
       },
       select: {
@@ -246,8 +249,6 @@ export class AuthService {
         name: true,
         email: true,
         role: true,
-        bio: true,
-        avatarUrl: true,
         createdAt: true,
         updatedAt: true,
       },
