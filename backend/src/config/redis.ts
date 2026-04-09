@@ -5,33 +5,35 @@
 import IORedis from 'ioredis';
 import { env } from './env';
 
-let redisConnection: IORedis | null = null;
+const connections: IORedis[] = [];
 
 export function getRedisConnection(): IORedis {
-  if (!redisConnection) {
-    redisConnection = new IORedis({
-      host: env.REDIS_HOST,
-      port: env.REDIS_PORT,
-      maxRetriesPerRequest: null, // Required by BullMQ
-      enableReadyCheck: false,
-    });
+  const conn = new IORedis({
+    host: env.REDIS_HOST,
+    port: env.REDIS_PORT,
+    maxRetriesPerRequest: null, // Required by BullMQ
+    enableReadyCheck: false,
+  });
 
-    redisConnection.on('connect', () => {
+  conn.on('connect', () => {
+    // Only log once to avoid terminal spam
+    if (connections.length === 1) {
       console.log('✅ Redis connected');
-    });
+    }
+  });
 
-    redisConnection.on('error', (err) => {
-      console.error('❌ Redis connection error:', err.message);
-    });
-  }
+  conn.on('error', (err) => {
+    console.error('❌ Redis connection error:', err.message);
+  });
 
-  return redisConnection;
+  connections.push(conn);
+  return conn;
 }
 
 export async function disconnectRedis(): Promise<void> {
-  if (redisConnection) {
-    await redisConnection.quit();
-    redisConnection = null;
+  if (connections.length > 0) {
+    await Promise.all(connections.map(conn => conn.quit().catch(() => {})));
+    connections.length = 0;
     console.log('🔌 Redis disconnected');
   }
 }
